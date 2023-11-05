@@ -1,0 +1,71 @@
+version: "3.9"
+name: taskflow
+services:
+  users-db:
+    image: postgres:16.0-alpine
+    environment:
+      POSTGRES_DB: taskflow.users
+      POSTGRES_USER: wizard
+      POSTGRES_PASSWORD: ${USERS_PASSWORD}
+    volumes:
+      - postgre-users:/var/lib/postgresql/data
+    ports:
+      - 5401:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wizard -d taskflow.users"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  boards-db:
+    image: postgres:16.0-alpine
+    environment:
+      POSTGRES_DB: taskflow.boards
+      POSTGRES_USER: wizard
+      POSTGRES_PASSWORD: ${BOARDS_PASSWORD}
+    volumes:
+      - postgre-boards:/var/lib/postgresql/data
+    ports:
+      - 5402:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wizard -d taskflow.boards"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./src/TodoWebApp
+      dockerfile: Dockerfile
+    ports:
+      - 5000:80
+    depends_on:
+      - boards-db
+      - users-db
+    restart: unless-stopped
+  
+  frontend:
+    build:
+      context: ./src/TodoWebApp.Frontend/task-flow
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
+    restart: unless-stopped
+  
+  telegram-bot:
+    build:
+      context: ./src/TodoWebApp.Bot
+      dockerfile: Dockerfile
+    environment:
+      BOT_API_KEY: ${BOT_API_KEY}
+    depends_on:
+      - users-db
+    restart: unless-stopped
+
+volumes:
+  postgre-users:
+  postgre-boards:

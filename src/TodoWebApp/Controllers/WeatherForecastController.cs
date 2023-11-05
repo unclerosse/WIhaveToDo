@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace TodoWebApp.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/managers")]
 public class EmptyController : ControllerBase
 {
     private readonly ILogger<EmptyController> _logger;
@@ -13,7 +13,7 @@ public class EmptyController : ControllerBase
         _logger = logger;
     }
 
-    [HttpGet("/hello-world")]
+    [HttpGet("hello-world")]
     public string GetMessage()
     {
         _logger.LogInformation("get");
